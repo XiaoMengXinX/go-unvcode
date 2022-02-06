@@ -80,12 +80,9 @@ func (u *Unvcode) 比较(字1, 字2 string) float64 {
 	return statistics.Variance(&差)
 }
 
-func (u *Unvcode) 假面(字 int32, skipAscii bool, mse float64) (float64, string) {
-	if 字 < 128 && skipAscii {
-		return 0.0, string(字)
-	}
+func (u *Unvcode) 假面(字 int32) (float64, string) {
 	候选组 := d[string(字)]
-	if len(候选组) == 0 {
+	if (字 < 128 && u.SkipAscii) || len(候选组) == 0 {
 		return -1.0, string(字)
 	}
 	差异组 := make(map[string]float64)
@@ -94,10 +91,18 @@ func (u *Unvcode) 假面(字 int32, skipAscii bool, mse float64) (float64, strin
 	}
 	差异, 新字 := 1.0, ""
 	for k, v := range 差异组 {
-		if v < 差异 || 差异 == 0 {
+		if v < 差异 && v < u.Mse {
 			差异 = v
 			新字 = k
 		}
+		if 差异 == 0.0 {
+			差异 = v
+			新字 = k
+			break
+		}
+	}
+	if 新字 == "" || 差异 > u.Mse {
+		return -1.0, string(字)
 	}
 	return 差异, 新字
 }
@@ -106,7 +111,7 @@ func (u *Unvcode) 假面(字 int32, skipAscii bool, mse float64) (float64, strin
 func (u *Unvcode) Parse(str string) (string, []float64) {
 	差异, 串 := []float64{}, ""
 	for _, s := range str {
-		f, c := u.假面(s, u.SkipAscii, u.Mse)
+		f, c := u.假面(s)
 		差异 = append(差异, f)
 		串 += c
 	}
