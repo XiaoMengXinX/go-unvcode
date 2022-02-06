@@ -27,7 +27,7 @@ func main() {
 }
 ```
 
-新建 Unvcode 实例时需传入字体，example 中的字体文件以以在 [RimoChan/unvcode](https://github.com/RimoChan/unvcode) 找到
+新建 Unvcode 对象时需传入字体，example 中的字体文件可以在 [RimoChan/unvcode](https://github.com/RimoChan/unvcode) 找到
 
 可选的参数是 `Unvcode.SkipAscii = true, Unvcode.Mse = 0.1`，前者是跳过 ASCII 字符，后者是字符相似度的阈值。（详见源代码）
 
