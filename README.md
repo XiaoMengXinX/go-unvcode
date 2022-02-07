@@ -105,9 +105,9 @@ func main() {
 ```
 > go build -ldflags='-w -s'
 > .\test.exe
-Benchmark starts at: 1644239353755
-Benchmark done at: 1644239391471
-Duration: 37716 ms
+Benchmark starts at: 1644241816755
+Benchmark done at: 1644241832223
+Duration: 15468 ms
 ```
 
 我也不知道怎么优化了，欢迎大佬们的 pr（

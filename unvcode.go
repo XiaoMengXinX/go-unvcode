@@ -7,7 +7,6 @@ import (
 	"golang.org/x/image/math/fixed"
 	"golang.org/x/text/unicode/norm"
 	"image"
-	"image/draw"
 )
 
 var d = make(map[string][]string)
@@ -55,16 +54,15 @@ func New(fontByte []byte) (*unv, error) {
 
 func (u *unv) 画皮(字 string) []uint8 {
 	img := image.NewGray(image.Rect(0, 0, 100, 100))
-	draw.Draw(img, img.Bounds(), image.White, image.Point{}, draw.Src)
 	d := font.Drawer{
 		Dst:  img,
-		Src:  image.Black,
+		Src:  image.White,
 		Face: u.face,
 		Dot:  fixed.P(u.face.Metrics().Descent.Round(), u.face.Metrics().Ascent.Round()),
 	}
 	d.DrawString(字)
 	for i, p := range img.Pix {
-		img.Pix[i] = p / 255
+		img.Pix[i] = (255 - p) / 255
 	}
 	return img.Pix
 }
