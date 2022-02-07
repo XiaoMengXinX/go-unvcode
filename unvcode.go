@@ -2,7 +2,6 @@ package unvcode
 
 import (
 	"fmt"
-	"github.com/grd/statistics"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
 	"golang.org/x/image/math/fixed"
@@ -13,9 +12,8 @@ import (
 
 var d = make(map[string][]string)
 
-// Unvcode struct
-type Unvcode struct {
-	Face font.Face
+type unv struct {
+	face font.Face
 	// SkipAscii 开启则会跳过ascii字符
 	SkipAscii bool
 	// Mse 字符相似度的阈值
@@ -32,15 +30,15 @@ func init() {
 	}
 }
 
-// New 使用字体文件创建一个 Unvcode 对象
-func New(fontByte []byte) (*Unvcode, error) {
-	var u Unvcode
+// New 使用字体文件创建一个 unv 对象
+func New(fontByte []byte) (*unv, error) {
+	var u unv
 	if len(fontByte) != 0 {
 		f, err := opentype.Parse(fontByte)
 		if err != nil {
 			return nil, fmt.Errorf("Parse: %v ", err)
 		}
-		u.Face, err = opentype.NewFace(f, &opentype.FaceOptions{
+		u.face, err = opentype.NewFace(f, &opentype.FaceOptions{
 			Size: 64,
 			DPI:  72,
 		})
@@ -55,14 +53,14 @@ func New(fontByte []byte) (*Unvcode, error) {
 	return &u, nil
 }
 
-func (u *Unvcode) 画皮(字 string) []uint8 {
+func (u *unv) 画皮(字 string) []uint8 {
 	img := image.NewGray(image.Rect(0, 0, 100, 100))
 	draw.Draw(img, img.Bounds(), image.White, image.Point{}, draw.Src)
 	d := font.Drawer{
 		Dst:  img,
 		Src:  image.Black,
-		Face: u.Face,
-		Dot:  fixed.P(u.Face.Metrics().Descent.Round(), u.Face.Metrics().Ascent.Round()),
+		Face: u.face,
+		Dot:  fixed.P(u.face.Metrics().Descent.Round(), u.face.Metrics().Ascent.Round()),
 	}
 	d.DrawString(字)
 	for i, p := range img.Pix {
@@ -71,16 +69,30 @@ func (u *Unvcode) 画皮(字 string) []uint8 {
 	return img.Pix
 }
 
-func (u *Unvcode) 比较(字1, 字2 string) float64 {
+func (u *unv) 比较(字1, 字2 string) float64 {
 	var 皮1, 皮2 = u.画皮(字1), u.画皮(字2)
-	var 差 statistics.Int64
-	for i := 0; i < 10000; i++ {
-		差 = append(差, int64(皮1[i])-int64(皮2[i]))
+	var 差 []int32
+	for i, p := range 皮1 {
+		差 = append(差, int32(p)-int32(皮2[i]))
 	}
-	return statistics.Variance(&差)
+	return variance(差)
 }
 
-func (u *Unvcode) 假面(字 int32) (float64, string) {
+func variance(a []int32) float64 {
+	Len := len(a)
+	var 和 int32
+	for i := 0; i < Len; i++ {
+		和 += a[i]
+	}
+	平均值 := float64(和) / float64(Len)
+	var 平方和 float64
+	for i := 0; i < Len; i++ {
+		平方和 += (float64(a[i]) - 平均值) * (float64(a[i]) - 平均值)
+	}
+	return 平方和 / float64(Len)
+}
+
+func (u *unv) 假面(字 int32) (float64, string) {
 	候选组 := d[string(字)]
 	if (字 < 128 && u.SkipAscii) || len(候选组) == 0 {
 		return -1.0, string(字)
@@ -107,8 +119,8 @@ func (u *Unvcode) 假面(字 int32) (float64, string) {
 	return 差异, 新字
 }
 
-// Parse 解析字符串
-func (u *Unvcode) Parse(str string) (string, []float64) {
+// Unvcode 解析字符串
+func (u *unv) Unvcode(str string) (string, []float64) {
 	差异, 串 := []float64{}, ""
 	for _, s := range str {
 		f, c := u.假面(s)
