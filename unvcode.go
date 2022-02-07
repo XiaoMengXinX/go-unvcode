@@ -11,7 +11,8 @@ import (
 
 var d = make(map[string][]string)
 
-type unv struct {
+// Unv struct
+type Unv struct {
 	face font.Face
 	// SkipAscii 开启则会跳过ascii字符
 	SkipAscii bool
@@ -29,9 +30,9 @@ func init() {
 	}
 }
 
-// New 使用字体文件创建一个 unv 对象
-func New(fontByte []byte) (*unv, error) {
-	var u unv
+// New 使用字体文件创建一个 Unv 对象
+func New(fontByte []byte) (*Unv, error) {
+	var u Unv
 	if len(fontByte) != 0 {
 		f, err := opentype.Parse(fontByte)
 		if err != nil {
@@ -52,7 +53,7 @@ func New(fontByte []byte) (*unv, error) {
 	return &u, nil
 }
 
-func (u *unv) 画皮(字 string) []uint8 {
+func (u *Unv) 画皮(字 string) []uint8 {
 	img := image.NewGray(image.Rect(0, 0, 100, 100))
 	d := font.Drawer{
 		Dst:  img,
@@ -67,7 +68,7 @@ func (u *unv) 画皮(字 string) []uint8 {
 	return img.Pix
 }
 
-func (u *unv) 比较(字1, 字2 string) float64 {
+func (u *Unv) 比较(字1, 字2 string) float64 {
 	var 皮1, 皮2 = u.画皮(字1), u.画皮(字2)
 	var 差 []int32
 	for i, p := range 皮1 {
@@ -90,7 +91,7 @@ func variance(a []int32) float64 {
 	return 平方和 / float64(Len)
 }
 
-func (u *unv) 假面(字 int32) (float64, string) {
+func (u *Unv) 假面(字 int32) (float64, string) {
 	候选组 := d[string(字)]
 	if (字 < 128 && u.SkipAscii) || len(候选组) == 0 {
 		return -1.0, string(字)
@@ -118,7 +119,7 @@ func (u *unv) 假面(字 int32) (float64, string) {
 }
 
 // Unvcode 解析字符串
-func (u *unv) Unvcode(str string) (string, []float64) {
+func (u *Unv) Unvcode(str string) (string, []float64) {
 	差异, 串 := []float64{}, ""
 	for _, s := range str {
 		f, c := u.假面(s)
